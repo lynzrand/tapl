@@ -65,7 +65,7 @@ library
           TypeOperators
           UndecidableInstances
           ViewPatterns
-    ghc-options: -Wall -Wno-unticked-promoted-constructors -fplugin=Effectful.Plugin
+    ghc-options: -Wall -Wno-unticked-promoted-constructors
     build-depends:
           aeson
         , aeson-pretty
@@ -139,7 +139,7 @@ executable app
           TypeOperators
           UndecidableInstances
           ViewPatterns
-    ghc-options: -Wall -Wno-unticked-promoted-constructors -fplugin=Effectful.Plugin
+    ghc-options: -Wall -Wno-unticked-promoted-constructors
     build-depends:
           aeson
         , aeson-pretty

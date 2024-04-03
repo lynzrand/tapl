@@ -93,7 +93,7 @@ ghc-options:
   # https://gitlab.haskell.org/ghc/ghc/-/issues/20531
   - -Wno-unticked-promoted-constructors
   # https://hackage.haskell.org/package/effectful-plugin
-  - -fplugin=Effectful.Plugin
+  # - -fplugin=Effectful.Plugin
 
 library:
   source-dirs: src
