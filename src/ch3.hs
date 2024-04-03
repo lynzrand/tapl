@@ -9,30 +9,18 @@ data Term
   | TStuck
   deriving (Show)
 
-eval :: Term -> Either Term Term
+eval :: Term -> Either String Term
 eval (TIf TTrue t1 _) = Right t1
 eval (TIf TFalse _ t2) = Right t2
-eval (TIf t t1 t2) =
-  let evt = eval t
-   in case evt of
-        (Right t0) -> Right $ TIf t0 t1 t2
-        (Left _) -> Left t
+eval (TIf t t1 t2) = eval t >>= \t0 -> return $ TIf t0 t1 t2
 eval (TSucc t) = Right $ TSucc t
 eval (TPred TZero) = Right TZero
 eval (TPred (TSucc t)) | isNum t = Right t
-eval (TPred t) =
-  let evt = eval t
-   in case evt of
-        (Right t0) -> Right $ TPred t0
-        (Left _) -> Left t
+eval (TPred t) = eval t >>= \t0 -> return $ TPred t0
 eval (TIsZero TZero) = Right TTrue
 eval (TIsZero (TSucc n)) | isNum n = Right TFalse
-eval (TIsZero t) =
-  let evt = eval t
-   in case evt of
-        (Right t0) -> Right $ TIsZero t0
-        (Left _) -> Left t
-eval t = Left t
+eval (TIsZero t) = eval t >>= \t0 -> return $ TIsZero t0
+eval _ = Left "No rules applies!"
 
 isNum :: Term -> Bool
 isNum TZero = True
@@ -54,5 +42,5 @@ fulleval :: Term -> EvalResult
 fulleval t =
   let evt = eval t
    in case evt of
-        (Left t1) -> (if isValue t1 then Ok t1 else Stuck t1)
+        (Left _) -> (if isValue t then Ok t else Stuck t)
         (Right t1) -> fulleval t1
