@@ -1,0 +1,103 @@
+name: tapl
+version: 0.1.0.0
+github: "lynzrand/tapl"
+license: MIT
+author: "lynzrand"
+maintainer: "i@rynco.me"
+copyright: "2022 Rynco Maekawa"
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: ""
+
+language: GHC2021
+
+default-extensions:
+  - AllowAmbiguousTypes
+  - BinaryLiterals
+  - BlockArguments
+  - ConstraintKinds
+  - DataKinds
+  - DeriveAnyClass
+  - DeriveGeneric
+  - DerivingStrategies
+  - DuplicateRecordFields
+  - ExtendedDefaultRules
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - LambdaCase
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - NamedFieldPuns
+  - NoFieldSelectors
+  # - NoImplicitPrelude # https://github.com/commercialhaskell/stack/issues/5077
+  - NoStarIsType
+  - OverloadedLabels
+  - OverloadedRecordDot
+  # - OverloadedRecordUpdate
+  - OverloadedStrings
+  - PartialTypeSignatures
+  - PatternSynonyms
+  - PolyKinds
+  - QuasiQuotes
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - StandaloneKindSignatures
+  - TemplateHaskell
+  - TupleSections
+  - TypeApplications
+  - TypeFamilies
+  - TypeOperators
+  - UndecidableInstances
+  - ViewPatterns
+
+dependencies:
+  - name: base
+    version: ">= 4.7 && < 5"
+    mixin:
+      - hiding (Prelude)
+  - name: relude
+    mixin:
+      - (Relude as Prelude)
+      - ""
+  - aeson
+  - aeson-pretty
+  - bimap
+  - data-default
+  - effectful-core
+  - effectful-plugin
+  - effectful-th
+  - exceptions
+  - extra
+  - file-embed
+  - filepath
+  - megaparsec
+  - optics
+  - parser-combinators
+  - scientific
+  - string-interpolate
+  - unliftio
+  - vector
+  - witch
+
+ghc-options:
+  - -Wall
+  # https://gitlab.haskell.org/ghc/ghc/-/issues/20531
+  - -Wno-unticked-promoted-constructors
+  # https://hackage.haskell.org/package/effectful-plugin
+  - -fplugin=Effectful.Plugin
+
+library:
+  source-dirs: src
+
+executables:
+  app:
+    main: app/Main.hs
