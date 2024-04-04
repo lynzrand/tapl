@@ -20,6 +20,8 @@ source-repository head
     location: https://github.com/lynzrand/tapl
 
 library
+    exposed-modules:
+          Tapl.Ch3
     other-modules:
           Paths_tapl
     autogen-modules:
@@ -67,7 +69,8 @@ library
           ViewPatterns
     ghc-options: -Wall -Wno-unticked-promoted-constructors
     build-depends:
-          aeson
+          HUnit
+        , aeson
         , aeson-pretty
         , base >=4.7 && <5
         , bimap
@@ -94,12 +97,14 @@ library
         , relude 
     default-language: GHC2021
 
-executable app
-    main-is: app/Main.hs
+executable tapl-app
+    main-is: Main.hs
     other-modules:
           Paths_tapl
     autogen-modules:
           Paths_tapl
+    hs-source-dirs:
+          app
     default-extensions:
           AllowAmbiguousTypes
           BinaryLiterals
@@ -141,7 +146,8 @@ executable app
           ViewPatterns
     ghc-options: -Wall -Wno-unticked-promoted-constructors
     build-depends:
-          aeson
+          HUnit
+        , aeson
         , aeson-pretty
         , base >=4.7 && <5
         , bimap
@@ -159,6 +165,86 @@ executable app
         , relude
         , scientific
         , string-interpolate
+        , unliftio
+        , vector
+        , witch
+    mixins:
+          base hiding (Prelude)
+        , relude (Relude as Prelude)
+        , relude 
+    default-language: GHC2021
+
+test-suite tapl-test
+    type: exitcode-stdio-1.0
+    main-is: Main.hs
+    other-modules:
+          Tapl.Tests.Ch3
+          Paths_tapl
+    autogen-modules:
+          Paths_tapl
+    hs-source-dirs:
+          tests
+    default-extensions:
+          AllowAmbiguousTypes
+          BinaryLiterals
+          BlockArguments
+          ConstraintKinds
+          DataKinds
+          DeriveAnyClass
+          DeriveGeneric
+          DerivingStrategies
+          DuplicateRecordFields
+          ExtendedDefaultRules
+          FlexibleContexts
+          FlexibleInstances
+          FunctionalDependencies
+          GADTs
+          LambdaCase
+          MultiParamTypeClasses
+          MultiWayIf
+          NamedFieldPuns
+          NoFieldSelectors
+          NoStarIsType
+          OverloadedLabels
+          OverloadedRecordDot
+          OverloadedStrings
+          PartialTypeSignatures
+          PatternSynonyms
+          PolyKinds
+          QuasiQuotes
+          RankNTypes
+          ScopedTypeVariables
+          StandaloneDeriving
+          StandaloneKindSignatures
+          TemplateHaskell
+          TupleSections
+          TypeApplications
+          TypeFamilies
+          TypeOperators
+          UndecidableInstances
+          ViewPatterns
+    ghc-options: -Wall -Wno-unticked-promoted-constructors
+    build-depends:
+          HUnit
+        , aeson
+        , aeson-pretty
+        , base >=4.7 && <5
+        , bimap
+        , data-default
+        , effectful-core
+        , effectful-plugin
+        , effectful-th
+        , exceptions
+        , extra
+        , file-embed
+        , filepath
+        , megaparsec
+        , optics
+        , parser-combinators
+        , relude
+        , scientific
+        , string-interpolate
+        , tapl
         , unliftio
         , vector
         , witch

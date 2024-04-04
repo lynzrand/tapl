@@ -1,3 +1,5 @@
+module Tapl.Ch3 where
+
 data Term
   = TTrue
   | TFalse
@@ -6,8 +8,7 @@ data Term
   | TSucc Term
   | TPred Term
   | TIsZero Term
-  | TStuck
-  deriving (Show)
+  deriving (Show, Eq)
 
 eval :: Term -> Either String Term
 eval (TIf TTrue t1 _) = Right t1
@@ -36,7 +37,7 @@ isValue :: Term -> Bool
 isValue t = isNum t || isBool t
 
 data EvalResult = Ok Term | Stuck Term
-  deriving (Show)
+  deriving (Show, Eq)
 
 fulleval :: Term -> EvalResult
 fulleval t =

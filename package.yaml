@@ -87,6 +87,7 @@ dependencies:
   - unliftio
   - vector
   - witch
+  - HUnit
 
 ghc-options:
   - -Wall
@@ -99,5 +100,16 @@ library:
   source-dirs: src
 
 executables:
-  app:
-    main: app/Main.hs
+  tapl-app:
+    main: Main.hs
+    source-dirs: app
+    depenedencies:
+      - tapl
+
+tests:
+  tapl-test:
+    main: Main.hs
+    source-dirs: tests
+    dependencies:
+      - tapl
+      - HUnit
