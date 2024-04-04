@@ -1,4 +1,4 @@
-module Tapl.Ch3 (Term, EvalResult, smalleval, bigeval) where
+module Tapl.Ch3 (Term (..), EvalResult (..), smalleval, bigeval) where
 
 data Term
   = TTrue

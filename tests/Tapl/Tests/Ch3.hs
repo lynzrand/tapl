@@ -31,13 +31,21 @@ bigtest :: Term -> Test
 bigtest t =
   TestCase $ assertEqual "big and small coincides" (bigeval t) (smalleval t)
 
+bigtest0 :: Test
+bigtest0 = bigtest (TIf TTrue TTrue TFalse)
+
 bigtest1 :: Test
 bigtest1 = bigtest (TIf (TIsZero TZero) TTrue TFalse)
+
+bigtest2 :: Test
+bigtest2 = bigtest (TIf (TIsZero TFalse) TTrue TFalse)
 
 tests :: [Test]
 tests =
   [ TestLabel "test1" test1,
     TestLabel "test2" test2,
     TestLabel "test3" test3,
-    TestLabel "bigtest1" bigtest1
+    TestLabel "bigtest0" bigtest0,
+    TestLabel "bigtest1" bigtest1,
+    TestLabel "bigtest2" bigtest2
   ]
