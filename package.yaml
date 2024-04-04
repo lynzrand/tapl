@@ -103,7 +103,7 @@ executables:
   tapl-app:
     main: Main.hs
     source-dirs: app
-    depenedencies:
+    dependencies:
       - tapl
 
 tests:

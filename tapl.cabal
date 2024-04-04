@@ -165,6 +165,7 @@ executable tapl-app
         , relude
         , scientific
         , string-interpolate
+        , tapl
         , unliftio
         , vector
         , witch
