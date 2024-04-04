@@ -29,12 +29,10 @@ big :: Term -> Either Term Term
 big v | isValue v = return v
 big (TIf t1 t2 t3) = do
   et1 <- big t1
-  et2 <- big t2
-  et3 <- big t3
   case et1 of
-    TTrue -> return et2
-    TFalse -> return et3
-    _ -> Left $ TIf et1 et2 et3
+    TTrue -> big t2
+    TFalse -> big t3
+    _ -> Left $ TIf et1 t2 t3
 big (TSucc t1) = big t1 >>= \et1 -> return $ TSucc et1
 big (TPred t1) = do
   et1 <- big t1

@@ -43,6 +43,7 @@ default-extensions:
   - OverloadedRecordDot
   # - OverloadedRecordUpdate
   - OverloadedStrings
+  - OverloadedLists
   - PartialTypeSignatures
   - PatternSynonyms
   - PolyKinds

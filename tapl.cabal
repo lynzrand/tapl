@@ -22,6 +22,7 @@ source-repository head
 library
     exposed-modules:
           Tapl.Ch3
+          Tapl.Ch5
     other-modules:
           Paths_tapl
     autogen-modules:
@@ -52,6 +53,7 @@ library
           OverloadedLabels
           OverloadedRecordDot
           OverloadedStrings
+          OverloadedLists
           PartialTypeSignatures
           PatternSynonyms
           PolyKinds
@@ -129,6 +131,7 @@ executable tapl-app
           OverloadedLabels
           OverloadedRecordDot
           OverloadedStrings
+          OverloadedLists
           PartialTypeSignatures
           PatternSynonyms
           PolyKinds
@@ -180,6 +183,7 @@ test-suite tapl-test
     main-is: Main.hs
     other-modules:
           Tapl.Tests.Ch3
+          Tapl.Tests.Ch5
           Paths_tapl
     autogen-modules:
           Paths_tapl
@@ -209,6 +213,7 @@ test-suite tapl-test
           OverloadedLabels
           OverloadedRecordDot
           OverloadedStrings
+          OverloadedLists
           PartialTypeSignatures
           PatternSynonyms
           PolyKinds
