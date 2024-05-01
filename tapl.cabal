@@ -24,6 +24,7 @@ library
           Tapl.Ch3
           Tapl.Ch5
           Tapl.Ch6
+          Tapl.Ch8
     other-modules:
           Paths_tapl
     hs-source-dirs:
@@ -171,6 +172,7 @@ test-suite tapl-test
     other-modules:
           Tapl.Tests.Ch3
           Tapl.Tests.Ch6
+          Tapl.Tests.Ch8
           Paths_tapl
     hs-source-dirs:
           tests
