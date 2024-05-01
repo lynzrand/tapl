@@ -21,6 +21,7 @@ source-repository head
 
 library
     exposed-modules:
+          Tapl.Ch10
           Tapl.Ch3
           Tapl.Ch5
           Tapl.Ch6
