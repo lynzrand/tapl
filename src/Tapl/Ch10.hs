@@ -17,6 +17,8 @@ data Ty
   | TyArrow Ty Ty
   | TyTuple [Ty]
   | TyRecord [(String, Ty)]
+  | TySum [(String, Ty)]
+  | TyNever
   deriving (Eq, Read, Show)
 
 data Pat
@@ -38,6 +40,8 @@ data Term
   | TupleProj Term Int
   | Record [(String, Term)]
   | RecordProj Term String
+  | Variant String Term Ty -- view this variant as type Ty
+  | Case Term [(String, Pat, Term)]
   deriving (Eq, Read, Show)
 
 -- Values
@@ -59,10 +63,13 @@ type TypeEnv = [(String, Ty)]
 
 -- t2 can be assigned to a term expecting t1
 assignableAs :: Ty -> Ty -> Bool
-assignableAs t1 t2 = t1 == t2 -- This is rather uninteresting for now
+assignableAs _ TyNever = True
+assignableAs t1 t2 = t1 == t2
 
 upperBound :: Ty -> Ty -> Maybe Ty
-upperBound t1 t2 = if t1 == t2 then return t1 else Nothing -- And this too
+upperBound TyNever x = Just x
+upperBound x TyNever = Just x
+upperBound t1 t2 = if t1 == t2 then return t1 else Nothing
 
 match :: TypeEnv -> Pat -> Ty -> Maybe TypeEnv
 match env (PVar x) ty = return ((x, ty) : env)
@@ -118,3 +125,22 @@ typeof env (Record fields) = TyRecord <$> mapM (\(l, t) -> (,) l <$> typeof env 
 typeof env (RecordProj t l) = do
   TyRecord fields <- typeof env t
   lookup l fields
+typeof env (Variant v s t) = do
+  ty <- typeof env s
+  TySum ts <- Just t
+  lookup v ts >>= \ty' -> if ty == ty' then return t else Nothing
+typeof env (Case t cases) = do
+  TySum ts <- typeof env t
+  let casesTerms = zip cases ts
+  -- Now we need to check that each case is well-typed
+  foldM
+    ( \t_ ((caseName, castPat, caseTerm), (variantName, variantTy)) -> do
+        newEnv <- match env castPat variantTy
+        newType <- typeof newEnv caseTerm
+        if caseName == variantName
+          then
+            upperBound t_ newType
+          else Nothing
+    )
+    TyNever
+    casesTerms
