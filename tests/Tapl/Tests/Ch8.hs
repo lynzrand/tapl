@@ -42,7 +42,7 @@ testTypes =
     )
   ]
 
-runTyping :: [(Term, Maybe Ty)] -> Test
+runTyping :: [(Term, Maybe Ty)] -> [Test]
 runTyping = map runTyping'
   where
     runTyping' (term, expected) = TestCase $ assertEqual "" expected (getType [] term)
