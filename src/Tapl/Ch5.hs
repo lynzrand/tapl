@@ -11,12 +11,17 @@ module Tapl.Ch5
     tnot,
     lzero,
     lone,
+    scc,
+    scc',
     churchNum,
+    (\\),
   )
 where
 
 import Data.String (IsString (..))
 import GHC.IsList (IsList (..), Item)
+import GHC.Show (Show (..))
+import Prelude hiding (show)
 
 type Var = String
 
@@ -24,7 +29,20 @@ data Term
   = Var Var
   | Lambda Var Term
   | Apply Term Term
-  deriving (Show, Eq, Read)
+  deriving (Eq, Read)
+
+instance Show Term where
+  showsPrec _ (Var i) = showString i
+  showsPrec p (Lambda v t) =
+    showParen (p > prec) $
+      showString "\\" . showString v . showString ". " . shows t
+    where
+      prec = 1
+  showsPrec p (Apply lhs rhs) =
+    showParen (p > prec) $
+      showsPrec prec lhs . showString " " . showsPrec (prec + 1) rhs
+    where
+      prec = 2
 
 instance IsString Term where
   fromString :: String -> Term
@@ -39,27 +57,15 @@ instance IsList Term where
 l :: [Var] -> Term -> Term
 l xs t = foldr Lambda t xs
 
+(\\) :: [Var] -> Term -> Term
+(\\) = l
+
 a :: [Term] -> Term
-a [] = error "Apply must be called with an argument"
-a [t] = t
-a (x : xs) = Apply x (a xs)
-
--- Reductions
-doReduce :: Var -> Term -> Term -> Term
-doReduce var term (Var v)
-  | v == var = term
-  | otherwise = Var v
-doReduce var term (Apply t1 t2) =
-  Apply
-    (doReduce var term t1)
-    (doReduce var term t2)
-doReduce var term (Lambda v t)
-  | v == var = Lambda v t -- v is bounded in inner expression
-  | otherwise = Lambda v (doReduce var term t)
-
-reduce :: Term -> Term
-reduce (Apply (Lambda v e) vv) = doReduce v vv e
-reduce _ = error "Not a redex"
+a xs =
+  let aImpl [] = error "Apply must be called with an argument"
+      aImpl [x] = x
+      aImpl (x : xss) = Apply (aImpl xss) x
+   in aImpl (reverse xs)
 
 -- Identity
 tid :: Term
@@ -95,10 +101,10 @@ lone :: Term
 lone = l ["s", "z"] ["s", "z"]
 
 churchNum :: Int -> Term
-churchNum n = foldr (\_ x -> Apply "s" x) (Var "z") ([0 .. n] :: [Int])
+churchNum n = l ["s", "z"] (foldr (\_ x -> Apply "s" x) (Var "z") ([0 .. (n - 1)] :: [Int]))
 
-succ :: Term
-succ = l ["n", "s", "z"] ["s", ["n", "s", "z"]]
+scc :: Term
+scc = l ["n", "s", "z"] ["s", ["n", "s", "z"]]
 
-succ' :: Term
-succ' = l ["n", "s", "z"] ["n", "s", ["s", "z"]]
+scc' :: Term
+scc' = l ["n", "s", "z"] ["n", "s", ["s", "z"]]

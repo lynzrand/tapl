@@ -31,11 +31,11 @@ bigtest :: Term -> Test
 bigtest t =
   TestCase
     ( let bigt = bigeval t
-       in let smallt = smalleval t
-           in case (bigt, smallt) of
-                (Ok t1, Ok t2) -> assertEqual "big and small coincides" bigt smallt
-                (Stuck _, Stuck _) -> return ()
-                _ -> assertFailure "One is Ok and the other is Stuck"
+          smallt = smalleval t
+       in case (bigt, smallt) of
+            (Ok t1, Ok t2) -> assertEqual "big and small coincides" t1 t2
+            (Stuck _, Stuck _) -> return ()
+            _ -> assertFailure "One is Ok and the other is Stuck"
     )
 
 bigtest0 :: Test

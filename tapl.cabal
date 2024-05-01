@@ -23,6 +23,7 @@ library
     exposed-modules:
           Tapl.Ch3
           Tapl.Ch5
+          Tapl.Ch6
     other-modules:
           Paths_tapl
     autogen-modules:
@@ -183,7 +184,7 @@ test-suite tapl-test
     main-is: Main.hs
     other-modules:
           Tapl.Tests.Ch3
-          Tapl.Tests.Ch5
+          Tapl.Tests.Ch6
           Paths_tapl
     autogen-modules:
           Paths_tapl
