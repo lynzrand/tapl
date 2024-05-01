@@ -1,6 +1,7 @@
 module Tapl.Ch6
   ( UTerm (..),
     NamedEnv,
+    createEnv,
     removeNamesImpl,
     removeNames,
     getVarName,
@@ -10,15 +11,22 @@ module Tapl.Ch6
     shiftC,
     shift,
     subst,
+    substNamed,
+    normalOrderStep,
+    traceEval,
+    showTrace,
+    printTrace,
+    eval,
+    evalNamed,
+    evalNamed',
     module Tapl.Ch5,
   )
 where
 
-import Data.Bimap
+import Data.Bimap (Bimap)
 import Data.Bimap qualified as Bimap
-import GHC.Show (Show (..), showParen, showString, shows)
 import Tapl.Ch5
-import Prelude hiding (Show, lookup, show)
+import Prelude hiding (lookup)
 
 data UTerm
   = UVar Int
@@ -40,6 +48,9 @@ instance Show UTerm where
       prec = 2
 
 type NamedEnv = Bimap String Int
+
+createEnv :: [String] -> NamedEnv
+createEnv = Bimap.fromList . flip zip [0 ..]
 
 getVarName :: String -> NamedEnv -> Maybe Int
 getVarName = Bimap.lookup
@@ -98,7 +109,7 @@ restoreNames t = do
 
 shiftC :: Int -> Int -> UTerm -> UTerm
 shiftC cutoff n (UVar i) = if i < cutoff then UVar i else UVar (i + n)
-shiftC cutoff n (ULambda t) = ULambda (shiftC cutoff n t)
+shiftC cutoff n (ULambda t) = ULambda (shiftC (cutoff + 1) n t)
 shiftC cutoff n (UApply lhs rhs) = UApply (shiftC cutoff n lhs) (shiftC cutoff n rhs)
 
 shift :: Int -> UTerm -> UTerm
@@ -108,3 +119,58 @@ subst :: Int -> UTerm -> UTerm -> UTerm
 subst j s (UVar t) = if j == t then s else UVar t
 subst j s (ULambda t) = ULambda (subst (j + 1) (shift 1 s) t)
 subst j s (UApply lhs rhs) = UApply (subst j s lhs) (subst j s rhs)
+
+substNamed :: NamedEnv -> String -> Term -> Term -> Maybe Term
+substNamed env substitute with using = do
+  substId <- getVarName substitute env
+  withUTerm <- removeNamesImpl env with
+  usingUTerm <- removeNamesImpl env using
+  let substResult = subst substId withUTerm usingUTerm
+  restoreNamesE env substResult
+
+-- Evaluation
+
+apply :: UTerm -> UTerm -- Must be (UApply (ULambda _) _)
+apply (UApply (ULambda t) u) = shift (-1) (subst 0 (shift 1 u) t)
+apply _ = error "apply: not a lambda application"
+
+normalOrderStep :: UTerm -> Maybe UTerm
+normalOrderStep tt@(UApply (ULambda _) _) = Just $ apply tt
+normalOrderStep (UApply t1 t2) =
+  let t1' = normalOrderStep t1
+   in case t1' of
+        Just t1'' -> Just $ UApply t1'' t2
+        Nothing -> do
+          t2' <- normalOrderStep t2
+          Just $ UApply t1 t2'
+normalOrderStep (ULambda t) = ULambda <$> normalOrderStep t
+normalOrderStep _ = Nothing
+
+type EvalFunc = UTerm -> Maybe UTerm
+
+traceEval :: EvalFunc -> UTerm -> [UTerm]
+traceEval f t =
+  let impl acc t1 =
+        case f t1 of
+          Just t' -> impl (t' : acc) t'
+          Nothing -> reverse acc
+   in impl [t] t
+
+showTrace :: [UTerm] -> String
+showTrace = unlines . map show
+
+printTrace :: [UTerm] -> IO ()
+printTrace = putStrLn . showTrace
+
+eval :: EvalFunc -> UTerm -> UTerm
+eval f t = last $ traceEval f t
+
+evalNamed :: EvalFunc -> Term -> Maybe Term
+evalNamed f t = do
+  t' <- removeNames t
+  restoreNames $ eval f t'
+
+evalNamed' :: NamedEnv -> EvalFunc -> Term -> Maybe Term
+evalNamed' env f t = do
+  t' <- removeNamesImpl env t
+  restoreNamesE env $ eval f t'

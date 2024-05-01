@@ -21,8 +21,6 @@ where
 
 import Data.String (IsString (..))
 import GHC.IsList (IsList (..), Item)
-import GHC.Show (Show (..), showParen, showString, shows)
-import Prelude hiding (Show, show)
 
 type Var = String
 

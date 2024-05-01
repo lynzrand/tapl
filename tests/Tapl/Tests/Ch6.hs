@@ -30,7 +30,9 @@ testGlobalEnv :: NamedEnv
 testGlobalEnv = Bimap.fromList [("a", 0), ("b", 1)]
 
 testRemoveNames :: Term -> Maybe UTerm
-testRemoveNames = removeNamesImpl testGlobalEnv 
+testRemoveNames = removeNamesImpl testGlobalEnv
+
+-- Subst
 
 data SubstEnv = SubstEnv
   { subst :: String,
@@ -84,5 +86,32 @@ runSubst (SubstEnv {subst = substitute, with, using, expected}) =
 substTests :: [Test]
 substTests = map (TestCase . runSubst) substTestCases
 
+-- Eval
+
+type EvalCase = (Term, Term)
+
+evalCases :: [EvalCase]
+evalCases =
+  [ (tru, tru),
+    (fls, fls),
+    ([tor, tru, fls], tru),
+    ([tand, tru, fls], fls),
+    ([scc, lzero], lone)
+  ]
+
+runEval :: EvalCase -> Assertion
+runEval (term, expected) =
+  let res = do
+        term' <- testRemoveNames term
+        expected' <- testRemoveNames expected
+        let result = eval normalOrderStep term'
+        Just (result, expected')
+   in case res of
+        Nothing -> assertBool "Failed" False
+        (Just (x, y)) -> assertEqual "Eval results should match" y x
+
+evalTests :: [Test]
+evalTests = map (TestCase . runEval) evalCases
+
 tests :: [Test]
-tests = assertTerms ++ substTests
+tests = assertTerms ++ substTests ++ evalTests

@@ -63,12 +63,12 @@ default-extensions:
 dependencies:
   - name: base
     version: ">= 4.7 && < 5"
-    mixin:
-      - hiding (Prelude)
-  - name: relude
-    mixin:
-      - (Relude as Prelude)
-      - ""
+  #    mixin:
+  #      - hiding (Prelude)
+  #  - name: relude
+  #    mixin:
+  #      - (Relude as Prelude)
+  #      - ""
   - aeson
   - aeson-pretty
   - bimap

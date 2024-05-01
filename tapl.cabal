@@ -1,4 +1,4 @@
-cabal-version: 2.0
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.36.0.
 --
@@ -25,8 +25,6 @@ library
           Tapl.Ch5
           Tapl.Ch6
     other-modules:
-          Paths_tapl
-    autogen-modules:
           Paths_tapl
     hs-source-dirs:
           src
@@ -88,23 +86,16 @@ library
         , megaparsec
         , optics
         , parser-combinators
-        , relude
         , scientific
         , string-interpolate
         , unliftio
         , vector
         , witch
-    mixins:
-          base hiding (Prelude)
-        , relude (Relude as Prelude)
-        , relude 
     default-language: GHC2021
 
 executable tapl-app
     main-is: Main.hs
     other-modules:
-          Paths_tapl
-    autogen-modules:
           Paths_tapl
     hs-source-dirs:
           app
@@ -166,17 +157,12 @@ executable tapl-app
         , megaparsec
         , optics
         , parser-combinators
-        , relude
         , scientific
         , string-interpolate
         , tapl
         , unliftio
         , vector
         , witch
-    mixins:
-          base hiding (Prelude)
-        , relude (Relude as Prelude)
-        , relude 
     default-language: GHC2021
 
 test-suite tapl-test
@@ -185,8 +171,6 @@ test-suite tapl-test
     other-modules:
           Tapl.Tests.Ch3
           Tapl.Tests.Ch6
-          Paths_tapl
-    autogen-modules:
           Paths_tapl
     hs-source-dirs:
           tests
@@ -248,15 +232,10 @@ test-suite tapl-test
         , megaparsec
         , optics
         , parser-combinators
-        , relude
         , scientific
         , string-interpolate
         , tapl
         , unliftio
         , vector
         , witch
-    mixins:
-          base hiding (Prelude)
-        , relude (Relude as Prelude)
-        , relude 
     default-language: GHC2021
