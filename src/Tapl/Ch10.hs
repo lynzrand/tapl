@@ -18,7 +18,8 @@ data Ty
   | TyTuple [Ty]
   | TyRecord [(String, Ty)]
   | TySum [(String, Ty)]
-  | TyNever
+  | TyList Ty
+  | TyNever -- It's not part of chapter 11, but nevertheless it's included because it's useful
   deriving (Eq, Read, Show)
 
 data Pat
@@ -42,6 +43,12 @@ data Term
   | RecordProj Term String
   | Variant String Term Ty -- view this variant as type Ty
   | Case Term [(String, Pat, Term)]
+  | Fix Term
+  | ListNil Ty
+  | ListCons Ty Term Term
+  | ListIsNil Ty Term
+  | ListCar Ty Term
+  | ListCdr Ty Term
   deriving (Eq, Read, Show)
 
 -- Values
@@ -144,3 +151,30 @@ typeof env (Case t cases) = do
     )
     TyNever
     casesTerms
+typeof env (Fix t) = do
+  TyArrow ty1 ty2 <- typeof env t
+  if ty1 == ty2
+    then return ty1
+    else Nothing
+typeof _env (ListNil ty) = return (TyList ty)
+typeof env (ListCons ty hd tl) = do
+  TyList ty' <- typeof env tl
+  hdTy <- typeof env hd
+  if assignableAs ty hdTy && ty == ty'
+    then return (TyList ty)
+    else Nothing
+typeof env (ListIsNil ty lst) = do
+  TyList ty' <- typeof env lst
+  if ty == ty'
+    then return TyBool
+    else Nothing
+typeof env (ListCar ty lst) = do
+  TyList ty' <- typeof env lst
+  if ty == ty'
+    then return ty
+    else Nothing
+typeof env (ListCdr ty lst) = do
+  TyList ty' <- typeof env lst
+  if ty == ty'
+    then return (TyList ty)
+    else Nothing
