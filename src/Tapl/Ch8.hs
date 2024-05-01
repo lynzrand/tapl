@@ -17,7 +17,6 @@ data Term
   | TVar String
   | TApply Term Term
   | TIf Term Term Term
-  | TNot Term
   deriving (Eq, Read, Show)
 
 infixr 5 ->>
@@ -47,6 +46,3 @@ getType env (TIf cond t f) = do
   if ty1 == ty2
     then return ty1
     else Nothing
-getType env (TNot t) = do
-  TyBool <- getType env t
-  return TyBool

@@ -17,7 +17,7 @@ testTypes =
     ( TIf
         (TBool True)
         (TLambda "x" TyBool (TVar "x"))
-        (TLambda "x" TyBool (TNot (TVar "x"))),
+        (TLambda "x" TyBool (TApply (TVar "not") (TVar "x"))),
       Just (TyBool ->> TyBool)
     ),
     -- \x:(Bool -> Bool) . \y:Bool if x true then y else not y
@@ -45,7 +45,8 @@ testTypes =
 runTyping :: [(Term, Maybe Ty)] -> [Test]
 runTyping = map runTyping'
   where
-    runTyping' (term, expected) = TestCase $ assertEqual "" expected (getType [] term)
+    env = [("not", TyBool ->> TyBool)]
+    runTyping' (term, expected) = TestCase $ assertEqual "" expected (getType env term)
 
 typingTests :: [Test]
 typingTests = runTyping testTypes
