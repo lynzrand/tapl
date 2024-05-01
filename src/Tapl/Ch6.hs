@@ -1,11 +1,11 @@
 module Tapl.Ch6
   ( UTerm (..),
     NamedEnv,
-    RestoreEnv,
     removeNamesImpl,
-    removeNamesM,
     removeNames,
+    getVarName,
     restoreNamesImpl,
+    restoreNamesE,
     restoreNames,
     shiftC,
     shift,
@@ -14,7 +14,8 @@ module Tapl.Ch6
   )
 where
 
-import Data.HashMap.Strict
+import Data.Bimap
+import Data.Bimap qualified as Bimap
 import GHC.Show (Show (..), showParen, showString, shows)
 import Tapl.Ch5
 import Prelude hiding (Show, lookup, show)
@@ -38,73 +39,60 @@ instance Show UTerm where
     where
       prec = 2
 
-type NamedEnv = HashMap String Int
+type NamedEnv = Bimap String Int
 
-getVar :: String -> NamedEnv -> Maybe Int
-getVar = lookup
+getVarName :: String -> NamedEnv -> Maybe Int
+getVarName = Bimap.lookup
 
 -- Remove names
 
-removeNamesImpl :: NamedEnv -> Int -> Term -> Maybe (UTerm, Int)
-removeNamesImpl env maxid (Var name) = do
-  varid <- getVar name env
-  Just (UVar varid, maxid)
-removeNamesImpl env maxid (Lambda var term) =
-  let newMax = maxid + 1
-      varName = maxid
-      newEnv = insert var varName env
-   in do
-        (newTerm, finalMax) <- removeNamesImpl newEnv newMax term
-        Just (ULambda newTerm, finalMax)
-removeNamesImpl env maxid (Apply lhs rhs) =
-  do
-    (lhs1, max1) <- removeNamesImpl env maxid lhs
-    (rhs1, max2) <- removeNamesImpl env max1 rhs
-    Just (UApply lhs1 rhs1, max2)
+incrDepth :: NamedEnv -> NamedEnv
+incrDepth = Bimap.mapR (+ 1)
 
-removeNamesM :: Int -> Term -> Maybe UTerm
-removeNamesM m t = do
-  (term, _) <- removeNamesImpl Data.HashMap.Strict.empty m t
-  Just term
+removeNamesImpl :: NamedEnv -> Term -> Maybe UTerm
+removeNamesImpl env (Var v) = getVarName v env >>= Just . UVar
+removeNamesImpl env (Lambda v t) =
+  let newEnv = incrDepth env
+      newEnv' = Bimap.insert v 0 newEnv
+   in removeNamesImpl newEnv' t >>= Just . ULambda
+removeNamesImpl env (Apply ll rr) = do
+  lhs <- removeNamesImpl env ll
+  rhs <- removeNamesImpl env rr
+  Just $ UApply lhs rhs
 
 removeNames :: Term -> Maybe UTerm
-removeNames = removeNamesM 0
+removeNames = removeNamesImpl Bimap.empty
 
 -- Restore names
 
-data RestoreEnv = RestoreEnv
-  { maxId :: Int,
-    nameEnv :: HashMap Int String
-  }
+nextName :: Int -> (String, Int)
+nextName m =
+  let newName = "_" ++ show m
+   in (newName, m + 1)
 
-emptyRestore :: RestoreEnv
-emptyRestore = RestoreEnv {maxId = 0, nameEnv = Data.HashMap.Strict.empty}
+restoreNamesImpl :: NamedEnv -> Int -> UTerm -> Maybe (Int, Term)
+restoreNamesImpl env m (UVar v) = do
+  vl <- Bimap.lookupR v env
+  Just (m, Var vl)
+restoreNamesImpl env m (ULambda t) = do
+  let (name, m1) = nextName m
+  let newEnv = Bimap.insert name 0 (incrDepth env)
+  (m2, body) <- restoreNamesImpl newEnv m1 t
+  Just (m2, Lambda name body)
+restoreNamesImpl env m (UApply lhs rhs) = do
+  (m1, lhs') <- restoreNamesImpl env m lhs
+  (m2, rhs') <- restoreNamesImpl env m1 rhs
+  Just (m2, Apply lhs' rhs')
 
-nextName :: RestoreEnv -> (String, RestoreEnv)
-nextName env =
-  let newId = env.maxId
-      newName = "_" ++ show newId
-      newEnv = insert newId newName env.nameEnv
-   in (newName, RestoreEnv {maxId = newId + 1, nameEnv = newEnv})
-
-restoreNamesImpl :: RestoreEnv -> UTerm -> Maybe (RestoreEnv, Term)
-restoreNamesImpl env (UVar v) = do
-  vl <- lookup v env.nameEnv
-  Just (env, Var vl)
-restoreNamesImpl env (ULambda t) =
-  let (name, env1) = nextName env
-   in do
-        (env2, rhs) <- restoreNamesImpl env1 t
-        Just (env2, Lambda name rhs)
-restoreNamesImpl env (UApply lhs rhs) = do
-  (env1, lhs1) <- restoreNamesImpl env lhs
-  (env2, rhs1) <- restoreNamesImpl env1 rhs
-  Just (env2, Apply lhs1 rhs1)
+restoreNamesE :: NamedEnv -> UTerm -> Maybe Term
+restoreNamesE env t = do
+  (_, t') <- restoreNamesImpl env 0 t
+  Just t'
 
 restoreNames :: UTerm -> Maybe Term
-restoreNames term = do
-  (_, res) <- restoreNamesImpl emptyRestore term
-  Just res
+restoreNames t = do
+  (_, t') <- restoreNamesImpl Bimap.empty 0 t
+  Just t'
 
 -- Substitution
 

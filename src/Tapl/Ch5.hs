@@ -1,5 +1,6 @@
 module Tapl.Ch5
   ( Term (..),
+    Var,
     l,
     a,
     tid,
