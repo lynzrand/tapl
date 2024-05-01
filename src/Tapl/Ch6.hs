@@ -1,24 +1,29 @@
 module Tapl.Ch6
   ( UTerm (..),
     NamedEnv,
+    RestoreEnv,
     removeNamesImpl,
     removeNamesM,
     removeNames,
     restoreNamesImpl,
     restoreNames,
+    shiftC,
+    shift,
+    subst,
     module Tapl.Ch5,
   )
 where
 
 import Data.HashMap.Strict
-import GHC.Show (Show (..))
+import GHC.Show (Show (..), showParen, showString, shows)
 import Tapl.Ch5
-import Prelude hiding (lookup, show)
+import Prelude hiding (Show, lookup, show)
 
 data UTerm
   = UVar Int
   | ULambda UTerm
   | UApply UTerm UTerm
+  deriving (Read, Eq)
 
 instance Show UTerm where
   showsPrec _ (UVar i) = shows i
@@ -73,7 +78,7 @@ data RestoreEnv = RestoreEnv
   }
 
 emptyRestore :: RestoreEnv
-emptyRestore = RestoreEnv {maxId = 0, nameEnv = empty}
+emptyRestore = RestoreEnv {maxId = 0, nameEnv = Data.HashMap.Strict.empty}
 
 nextName :: RestoreEnv -> (String, RestoreEnv)
 nextName env =
@@ -100,3 +105,18 @@ restoreNames :: UTerm -> Maybe Term
 restoreNames term = do
   (_, res) <- restoreNamesImpl emptyRestore term
   Just res
+
+-- Substitution
+
+shiftC :: Int -> Int -> UTerm -> UTerm
+shiftC cutoff n (UVar i) = if i < cutoff then UVar i else UVar (i + n)
+shiftC cutoff n (ULambda t) = ULambda (shiftC cutoff n t)
+shiftC cutoff n (UApply lhs rhs) = UApply (shiftC cutoff n lhs) (shiftC cutoff n rhs)
+
+shift :: Int -> UTerm -> UTerm
+shift = shiftC 0
+
+subst :: Int -> UTerm -> UTerm -> UTerm
+subst j s (UVar t) = if j == t then s else UVar t
+subst j s (ULambda t) = ULambda (subst (j + 1) (shift 1 s) t)
+subst j s (UApply lhs rhs) = UApply (subst j s lhs) (subst j s rhs)
