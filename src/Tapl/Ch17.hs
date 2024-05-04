@@ -5,6 +5,11 @@ module Tapl.Ch10
     (->>),
     isValue,
     typeof,
+    TypeEnv,
+    match,
+    (<:),
+    isSubtype,
+    upperBound,
   )
 where
 
@@ -19,7 +24,8 @@ data Ty
   | TyRecord [(String, Ty)]
   | TySum [(String, Ty)]
   | TyList Ty
-  | TyNever -- It's not part of chapter 11, but nevertheless it's included because it's useful
+  | TyBot -- It's not part of chapter 11, but nevertheless it's included because it's useful
+  | TyTop
   deriving (Eq, Read, Show)
 
 data Pat
@@ -68,15 +74,32 @@ infixr 5 ->>
 
 type TypeEnv = [(String, Ty)]
 
--- t2 can be assigned to a term expecting t1
-assignableAs :: Ty -> Ty -> Bool
-assignableAs _ TyNever = True
-assignableAs t1 t2 = t1 == t2
+-- Subtype
+isSubtype :: Ty -> Ty -> Bool
+isSubtype TyBot _ = True
+isSubtype _ TyTop = True
+isSubtype (TyArrow t11 t12) (TyArrow t21 t22) = isSubtype t21 t11 && isSubtype t12 t22
+isSubtype (TyTuple ts1) (TyTuple ts2) = all id (zipWith isSubtype ts1 ts2)
+isSubtype (TyRecord ts1) (TyRecord ts2) =
+  -- same order, less or equal fields
+  (length ts1 >= length ts2)
+    && and (zipWith (\(name1, ty1) (name2, ty2) -> name1 == name2 && isSubtype ty1 ty2) ts1 ts2)
+isSubtype (TySum ts1) (TySum ts2) =
+  -- same order, more or equal variants
+  (length ts1 <= length ts2)
+    && and (zipWith (\(name1, ty1) (name2, ty2) -> name1 == name2 && isSubtype ty1 ty2) ts1 ts2)
+isSubtype (TyList t1) (TyList t2) = isSubtype t1 t2
+isSubtype t1 t2 = t1 == t2
+
+infixl 5 <:
+
+(<:) :: Ty -> Ty -> Bool
+(<:) = isSubtype
 
 upperBound :: Ty -> Ty -> Maybe Ty
-upperBound TyNever x = Just x
-upperBound x TyNever = Just x
-upperBound t1 t2 = if t1 == t2 then return t1 else Nothing
+upperBound TyBot x = Just x
+upperBound x TyBot = Just x
+upperBound t1 t2 = if t1 == t2 then return t1 else Nothing -- Unfinished
 
 match :: TypeEnv -> Pat -> Ty -> Maybe TypeEnv
 match env (PVar x) ty = return ((x, ty) : env)
@@ -101,7 +124,7 @@ typeof env (Var v) = lookup v env
 typeof env (Apply lhs rhs) = do
   TyArrow ty1 ty2 <- typeof env lhs
   ty1' <- typeof env rhs
-  if assignableAs ty1 ty1'
+  if ty1' <: ty1
     then return ty2
     else Nothing
 typeof env (If cond t f) = do
@@ -114,7 +137,7 @@ typeof env (Seq t1 t2) = do
   typeof env t2
 typeof env (As term ty) = do
   ty' <- typeof env term
-  if assignableAs ty ty'
+  if ty' <: ty
     then return ty
     else Nothing
 typeof env (Let x t1 t2) = do
@@ -149,7 +172,7 @@ typeof env (Case t cases) = do
             upperBound t_ newType
           else Nothing
     )
-    TyNever
+    TyBot
     casesTerms
 typeof env (Fix t) = do
   TyArrow ty1 ty2 <- typeof env t
@@ -160,7 +183,7 @@ typeof _env (ListNil ty) = return (TyList ty)
 typeof env (ListCons ty hd tl) = do
   TyList ty' <- typeof env tl
   hdTy <- typeof env hd
-  if assignableAs ty hdTy && ty == ty'
+  if ty' <: ty && hdTy <: ty
     then return (TyList ty)
     else Nothing
 typeof env (ListIsNil ty lst) = do
